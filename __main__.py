@@ -134,18 +134,15 @@ def t_ID(t):
     t.type = reserved.get(t.value, "ID")
     return t
 
+def read_file(file_name):
+    file_object = open(file_name,"r")
+
+    return file_object.read()
 
 def main():
+
     lexer = lex.lex()
-    data = """
-    // comentario de linha
-    inteiro a = 10
-    inteiro b = 20
-    inteiro c = a + b
-    escreva(c)
-    escreva("Hello World")
-    se (39.37 + 4 - 5 * 10 != 6.36E-4)
-    """
+    data = read_file("ex1.por")
     lexer.input(data)
     while True:
         tok = lexer.token()
