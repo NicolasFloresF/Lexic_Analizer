@@ -99,7 +99,7 @@ def t_NUMBER(t):
     # decimal = [.]digit
     # exponent = E[+-]digit
     # number = digit | digit decimal | digit exponent | digit decimal exponent
-    r"\d+([.]\d+)?([E]([+]|[-])?\d+)?"
+    r"([-]|[+])?\d+([.]\d+)?([E]([+]|[-])?\d+)?"
     if isinstance(t.value, int):
         t.value = int(t.value)
     elif isinstance(t.value, float):
@@ -134,10 +134,12 @@ def t_ID(t):
     t.type = reserved.get(t.value, "ID")
     return t
 
+
 def read_file(file_name):
-    file_object = open(file_name,"r")
+    file_object = open(file_name, "r")
 
     return file_object.read()
+
 
 def main():
 
