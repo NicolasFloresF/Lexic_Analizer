@@ -173,5 +173,9 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-.tar.xz
-.txt
+# custom local files ignored
+*.tar.xz
+*.txt
+*.out
+*parsetab.py
+
