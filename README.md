@@ -22,7 +22,11 @@ Para executar o analisador, é necessário ter instalado:
 
 Instalação das dependências:
 ```bash
-pip install -r requirements.txt
+poetry install
+```
+Acessar o ambiente virtual:
+```bash
+poetry shell
 ```
 
 ## Como Usar
