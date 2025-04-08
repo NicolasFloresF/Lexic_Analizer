@@ -10,7 +10,7 @@ def read_file(file_name):
 
 def main():
     lexer = lex.lex()
-    parser = yacc.yacc()
+    parser = yacc.yacc(debug=True)
     data = read_file("ex1.por")
     lexer.input(data)
     while True:
@@ -19,11 +19,8 @@ def main():
             break
         print(tok)
 
-    while True:
-        result = parser.parse(data, lexer=lexer)
-        if not result:
-            break
-        print(result)
+    syntaxParsing = parser.parse(data, lexer=lexer)
+    print(syntaxParsing)
 
 
 if __name__ == "__main__":
