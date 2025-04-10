@@ -178,4 +178,5 @@ cython_debug/
 *.txt
 *.out
 *parsetab.py
+*.png
 
