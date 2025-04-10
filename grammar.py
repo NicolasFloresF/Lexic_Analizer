@@ -1,9 +1,7 @@
 import ply.yacc as yacc
 from ASTnode import ASTnode
 
-
-# TODO: add symbol table
-# TODO: add AST visualization
+# !Remember: expression is a tree node, but commands is not
 
 precedence = (
     ("nonassoc", "EQUAL", "DIFFERENT"),
@@ -18,7 +16,12 @@ precedence = (
 
 def p_por_program(p):
     """program : PROGRAM LBRACE function_list RBRACE"""
-    p[0] = ASTnode("program", [p[3]], p.lineno(1))
+    children = [
+        ASTnode("LBRACE", value=p[2], lineno=p.lineno(2)),
+        ASTnode("function_list", p[3], lineno=p.lineno(3)),
+        ASTnode("RBRACE", value=p[4], lineno=p.lineno(4)),
+    ]
+    p[0] = ASTnode("program", children=children, lineno=p.lineno(1))
 
 
 def p_function_list(p):
@@ -31,8 +34,48 @@ def p_function_list(p):
 
 
 def p_function(p):
-    """function : FUNCTION ID LPAREN RPAREN LBRACE commands RBRACE"""
-    p[0] = ASTnode("function", [p[2], p[6]], value=p[2], lineno=p.lineno(2))
+    """function : FUNCTION ID LPAREN RPAREN LBRACE commands RBRACE
+    | FUNCTION ID LPAREN param RPAREN LBRACE commands RBRACE"""
+    if len(p) == 8:
+        children = [
+            ASTnode("identifier", value=p[2], lineno=p.lineno(2)),
+            ASTnode("LPAREN", value=p[3], lineno=p.lineno(3)),
+            ASTnode("RPAREN", value=p[4], lineno=p.lineno(4)),
+            ASTnode("LBRACE", value=p[5], lineno=p.lineno(5)),
+            ASTnode("commands", p[6], lineno=p.lineno(6)),
+            ASTnode("RBRACE", value=p[7], lineno=p.lineno(7)),
+        ]
+        p[0] = ASTnode("function", children=children, value=p[2], lineno=p.lineno(2))
+    elif len(p) == 9:
+        children = [
+            ASTnode("identifier", value=p[2], lineno=p.lineno(2)),
+            ASTnode("LPAREN", value=p[3], lineno=p.lineno(3)),
+            p[4],
+            ASTnode("RPAREN", value=p[5], lineno=p.lineno(5)),
+            ASTnode("LBRACE", value=p[6], lineno=p.lineno(6)),
+            ASTnode("commands", p[7], lineno=p.lineno(7)),
+            ASTnode("RBRACE", value=p[8], lineno=p.lineno(8)),
+        ]
+        p[0] = ASTnode("function", children=children, value=p[2], lineno=p.lineno(2))
+
+
+def p_param(p):
+    """param : type ID
+    | type ID COMMA param"""
+    if len(p) == 3:
+        children = [
+            ASTnode("type", value=p[1], lineno=p.lineno(1)),
+            ASTnode("identifier", value=p[2], lineno=p.lineno(2)),
+        ]
+        p[0] = ASTnode("param", children=children, lineno=p.lineno(1))
+    elif len(p) == 5:
+        children = [
+            ASTnode("type", value=p[1], lineno=p.lineno(1)),
+            ASTnode("identifier", value=p[2], lineno=p.lineno(2)),
+            ASTnode("COMMA", value=p[3], lineno=p.lineno(3)),
+            p[4],
+        ]
+        p[0] = ASTnode("param", children=children, lineno=p.lineno(1))
 
 
 def p_commands(p):
@@ -60,7 +103,12 @@ def p_binary_expression(p):
     | expression MINUS expression
     | expression TIMES expression
     | expression DIVIDE expression"""
-    p[0] = ASTnode("binary_expression", [p[1], p[3]], value=p[2], lineno=p.lineno(2))
+    children = [
+        p[1],
+        ASTnode("binary_operator", value=p[2], lineno=p.lineno(2)),
+        p[3],
+    ]
+    p[0] = ASTnode("binary_expression", children=children, value=p[2], lineno=p.lineno(2))
 
 
 def p_expr_uminus(p):
@@ -71,7 +119,12 @@ def p_expr_uminus(p):
 def p_logical_expression(p):
     """expression : expression AND expression
     | expression OR expression"""
-    p[0] = ASTnode("logical_expression", [p[1], p[3]], value=p[2], lineno=p.lineno(2))
+    children = [
+        p[1],
+        ASTnode("logical_operator", value=p[2], lineno=p.lineno(2)),
+        p[3],
+    ]
+    p[0] = ASTnode("logical_expression", children=children, value=p[2], lineno=p.lineno(2))
 
 
 def p_relational_expression(p):
@@ -81,7 +134,12 @@ def p_relational_expression(p):
     | expression GREATER_EQUAL expression
     | expression EQUAL expression
     | expression DIFFERENT expression"""
-    p[0] = ASTnode("relational_expression", [p[1], p[3]], value=p[2], lineno=p.lineno(2))
+    children = [
+        p[1],
+        ASTnode("relational_operator", value=p[2], lineno=p.lineno(2)),
+        p[3],
+    ]
+    p[0] = ASTnode("relational_expression", children=children, value=p[2], lineno=p.lineno(2))
 
 
 def p_expression_group(p):
@@ -106,7 +164,11 @@ def p_expression_string(p):
 
 def p_declaration(p):
     """declaration : type declaration_list"""
-    p[0] = ASTnode("declaration", [p[2]], value=p[1], lineno=p.lineno(1))
+    children = [
+        ASTnode("type", value=p[1], lineno=p.lineno(1)),
+        p[2],
+    ]
+    p[0] = ASTnode("declaration", children=children, lineno=p.lineno(1))
 
 
 def p_type(p):
@@ -123,45 +185,113 @@ def p_declaration_list(p):
     | ID ATTRIBUTION expression
     | ID ATTRIBUTION expression COMMA declaration_list"""
     if len(p) == 2:
-        p[0] = ASTnode("decl_id", value=p[1], lineno=p.lineno(1))
+        children = [
+            ASTnode("identifier", value=p[1], lineno=p.lineno(1)),
+        ]
+        p[0] = ASTnode("declarations", children=children, lineno=p.lineno(1))
     elif len(p) == 4 and p[2] == ",":
-        p[0] = ASTnode("decl_list", [ASTnode("decl_id", value=p[1]), p[3]])
+        children = [
+            ASTnode("identifier", value=p[1], lineno=p.lineno(1)),
+            ASTnode("COMMA", value=p[2], lineno=p.lineno(2)),
+            p[3],
+        ]
+        p[0] = ASTnode("declarations", children=children, lineno=p.lineno(1))
     elif len(p) == 4 and p[2] == "=":
-        p[0] = ASTnode("assignment", [ASTnode("identifier", value=p[1]), p[3]])
+        children = [
+            ASTnode("identifier", value=p[1], lineno=p.lineno(1)),
+            ASTnode("atribuition", value=p[2], lineno=p.lineno(2)),
+            p[3],
+        ]
+        p[0] = ASTnode("declarations", children=children, lineno=p.lineno(1))
     elif len(p) == 6:
-        assign = ASTnode("assignment", [ASTnode("identifier", value=p[1]), p[3]])
-        p[0] = ASTnode("decl_list", [assign, p[5]])
+        children = [
+            ASTnode("identifier", value=p[1], lineno=p.lineno(1)),
+            ASTnode("atribuition", value=p[2], lineno=p.lineno(2)),
+            p[3],
+            ASTnode("COMMA", value=p[4], lineno=p.lineno(4)),
+            p[5],
+        ]
+        p[0] = ASTnode("declarations", children=children, lineno=p.lineno(1))
+
+
+def p_read_statement(p):
+    """read_statement : READ LPAREN ID RPAREN"""
+    children = [
+        ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
+        ASTnode("ID", value=p[3], lineno=p.lineno(3)),
+        ASTnode("RPAREN", value=p[4], lineno=p.lineno(4)),
+    ]
+    p[0] = ASTnode("read", children=children, value=p[3], lineno=p.lineno(1))
+
+
+def p_write_statement(p):
+    """write_statement : PRINT LPAREN expression RPAREN"""
+    children = [
+        ASTnode("PRINT", value=p[1], lineno=p.lineno(1)),
+        ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
+        p[3],
+        ASTnode("RPAREN", value=p[4], lineno=p.lineno(4)),
+    ]
+    p[0] = ASTnode("print", children=children, lineno=p.lineno(1))
 
 
 def p_if_statement(p):
     """if_statement : IF LPAREN expression RPAREN LBRACE commands RBRACE
     | IF LPAREN expression RPAREN LBRACE commands RBRACE ELSE LBRACE commands RBRACE"""
     if len(p) == 8:
-        p[0] = ASTnode("if", [p[3], ASTnode("block", p[6])], lineno=p.lineno(1))
+        children = [
+            ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
+            p[3],
+            ASTnode("RPAREN", value=p[4], lineno=p.lineno(4)),
+            ASTnode("LBRACE", value=p[5], lineno=p.lineno(5)),
+            ASTnode("commands", p[6], lineno=p.lineno(6)),
+            ASTnode("RBRACE", value=p[7], lineno=p.lineno(7)),
+        ]
+        p[0] = ASTnode("if", children=children, lineno=p.lineno(1))
     else:
-        p[0] = ASTnode("ifelse", [p[3], ASTnode("block", p[6]), ASTnode("block", p[10])], lineno=p.lineno(1))
+        children = [
+            ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
+            p[3],
+            ASTnode("RPAREN", value=p[4], lineno=p.lineno(4)),
+            ASTnode("LBRACE", value=p[5], lineno=p.lineno(5)),
+            ASTnode("commands", p[6], lineno=p.lineno(6)),
+            ASTnode("RBRACE", value=p[7], lineno=p.lineno(7)),
+            ASTnode("ELSE", value=p[8], lineno=p.lineno(8)),
+            ASTnode("LBRACE", value=p[9], lineno=p.lineno(9)),
+            ASTnode("commands", p[10], lineno=p.lineno(10)),
+            ASTnode("RBRACE", value=p[11], lineno=p.lineno(11)),
+        ]
+        p[0] = ASTnode("if_else", children=children, lineno=p.lineno(1))
 
 
 def p_while_statement(p):
     """while_statement : WHILE LPAREN expression RPAREN LBRACE commands RBRACE"""
-    p[0] = ASTnode("while", [p[3], ASTnode("block", p[6])], lineno=p.lineno(1))
+    children = [
+        ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
+        p[3],
+        ASTnode("RPAREN", value=p[4], lineno=p.lineno(4)),
+        ASTnode("LBRACE", value=p[5], lineno=p.lineno(5)),
+        ASTnode("commands", p[6], lineno=p.lineno(6)),
+        ASTnode("RBRACE", value=p[7], lineno=p.lineno(7)),
+    ]
+    p[0] = ASTnode("while", children=children, lineno=p.lineno(1))
 
 
 def p_for_statement(p):
     """for_statement : FOR LPAREN expression SEMICOLON expression SEMICOLON expression RPAREN LBRACE commands RBRACE"""
-    p[0] = ASTnode("for", [p[3], p[5], p[7], ASTnode("block", p[10])], lineno=p.lineno(1))
-
-
-def p_read_statement(p):
-    """read_statement : READ LPAREN ID RPAREN"""
-    p[0] = ASTnode("read", value=p[3], lineno=p.lineno(1))
-
-
-# put STRING so the write statement can be used with strings
-# for some reason this put the code in infinite loop
-def p_write_statement(p):
-    """write_statement : PRINT LPAREN expression RPAREN"""
-    p[0] = ASTnode("print", [p[3]], lineno=p.lineno(1))
+    children = [
+        ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
+        p[3],
+        ASTnode("SEMICOLON", value=p[4], lineno=p.lineno(4)),
+        p[5],
+        ASTnode("SEMICOLON", value=p[6], lineno=p.lineno(6)),
+        p[7],
+        ASTnode("RPAREN", value=p[8], lineno=p.lineno(8)),
+        ASTnode("LBRACE", value=p[9], lineno=p.lineno(9)),
+        ASTnode("commands", p[10], lineno=p.lineno(10)),
+        ASTnode("RBRACE", value=p[11], lineno=p.lineno(11)),
+    ]
+    p[0] = ASTnode("for", children=children, lineno=p.lineno(1))
 
 
 def p_error(p):
