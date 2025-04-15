@@ -42,6 +42,8 @@ operations = [
     "MINUS",
     "TIMES",
     "DIVIDE",
+    "INCREMENT",
+    "DECREMENT",
 ]
 
 literal = [
@@ -91,6 +93,8 @@ t_LBRACE = r"\{"
 t_RBRACE = r"\}"
 t_COMMA = r"\,"
 t_SEMICOLON = r"\;"
+t_INCREMENT = r"\+\+"
+t_DECREMENT = r"\-\-"
 
 
 t_ignore = " \t"
