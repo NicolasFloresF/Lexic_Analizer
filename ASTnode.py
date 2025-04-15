@@ -15,6 +15,8 @@ class ASTnode:
         ret = f"{indent}{self.nodetype}"
         if self.value is not None:
             ret += f": {self.value}"
+        if self.lineno is not None:
+            ret += f" (Line {self.lineno})"
         ret += "\n"
 
         for child in self.children:
