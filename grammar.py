@@ -142,6 +142,16 @@ def p_relational_expression(p):
     p[0] = ASTnode("relational_expression", children=children, value=p[2], lineno=p.lineno(2))
 
 
+def p_assignment_expression(p):
+    """expression : ID ATTRIBUTION expression"""
+    children = [
+        ASTnode("identifier", value=p[1], lineno=p.lineno(1)),
+        ASTnode("atribuition", value=p[2], lineno=p.lineno(2)),
+        p[3],
+    ]
+    p[0] = ASTnode("assignment_expression", children=children, value=p[2], lineno=p.lineno(1))
+
+
 def p_expression_group(p):
     """expression : LPAREN expression RPAREN"""
     p[0] = p[2]
@@ -157,9 +167,25 @@ def p_expression_number(p):
     p[0] = ASTnode("number", value=p[1], lineno=p.lineno(1))
 
 
+def p_expression_boolean(p):
+    """expression : TRUE
+    | FALSE"""
+    p[0] = ASTnode("boolean", value=p[1], lineno=p.lineno(1))
+
+
 def p_expression_string(p):
     """expression : STRING"""
     p[0] = ASTnode("string", value=p[1], lineno=p.lineno(1))
+
+
+def p_expression_increment(p):
+    """expression : ID INCREMENT
+    | ID DECREMENT"""
+    children = [
+        ASTnode("identifier", value=p[1], lineno=p.lineno(1)),
+        ASTnode("increment", value=p[2], lineno=p.lineno(2)),
+    ]
+    p[0] = ASTnode("increment_expression", children=children, value=p[2], lineno=p.lineno(1))
 
 
 def p_declaration(p):
@@ -295,4 +321,4 @@ def p_for_statement(p):
 
 
 def p_error(p):
-    print(f"Syntax error at '{p.value}'")
+    print(f"Syntax error at '{p.value} {p.type} {p.lexpos} '")
