@@ -178,7 +178,7 @@ def p_expression_string(p):
     p[0] = ASTnode("string", value=p[1], lineno=p.lineno(1))
 
 
-def p_expression_increment(p):
+def p_increment_expressionb(p):
     """expression : ID INCREMENT
     | ID DECREMENT"""
     children = [
@@ -186,6 +186,44 @@ def p_expression_increment(p):
         ASTnode("increment", value=p[2], lineno=p.lineno(2)),
     ]
     p[0] = ASTnode("increment_expression", children=children, value=p[2], lineno=p.lineno(1))
+
+
+def p_return_expression(p):
+    """expression : RETURN expression"""
+    children = [
+        ASTnode("RETURN", value=p[1], lineno=p.lineno(1)),
+        p[2],
+    ]
+    p[0] = ASTnode("return_expression", children=children, lineno=p.lineno(1))
+
+
+def p_call_function_expression(p):
+    """expression : ID LPAREN RPAREN
+    | ID LPAREN expression_list RPAREN"""
+    if len(p) == 4:
+        children = [
+            ASTnode("identifier", value=p[1], lineno=p.lineno(1)),
+            ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
+            ASTnode("RPAREN", value=p[3], lineno=p.lineno(3)),
+        ]
+        p[0] = ASTnode("call_function_expression", children=children, lineno=p.lineno(1))
+    else:
+        children = [
+            ASTnode("identifier", value=p[1], lineno=p.lineno(1)),
+            ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
+            ASTnode("expression_list", p[3], lineno=p.lineno(3)),
+            ASTnode("RPAREN", value=p[4], lineno=p.lineno(4)),
+        ]
+        p[0] = ASTnode("call_function_expression", children=children, lineno=p.lineno(1))
+
+
+def p_expression_list(p):
+    """expression_list : expression
+    | expression COMMA expression_list"""
+    if len(p) == 2:
+        p[0] = [p[1]]
+    elif len(p) == 4:
+        p[0] = [p[1]] + p[3]
 
 
 def p_declaration(p):
@@ -244,10 +282,10 @@ def p_read_statement(p):
     """read_statement : READ LPAREN ID RPAREN"""
     children = [
         ASTnode("LPAREN", value=p[2], lineno=p.lineno(2)),
-        ASTnode("ID", value=p[3], lineno=p.lineno(3)),
+        ASTnode("identifier", value=p[3], lineno=p.lineno(3)),
         ASTnode("RPAREN", value=p[4], lineno=p.lineno(4)),
     ]
-    p[0] = ASTnode("read", children=children, value=p[3], lineno=p.lineno(1))
+    p[0] = ASTnode("read", children=children, lineno=p.lineno(1))
 
 
 def p_write_statement(p):
@@ -287,7 +325,7 @@ def p_if_statement(p):
             ASTnode("commands", p[10], lineno=p.lineno(10)),
             ASTnode("RBRACE", value=p[11], lineno=p.lineno(11)),
         ]
-        p[0] = ASTnode("if_else", children=children, lineno=p.lineno(1))
+        p[0] = ASTnode("if", children=children, lineno=p.lineno(1))
 
 
 def p_while_statement(p):
