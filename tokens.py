@@ -1,7 +1,6 @@
 import ply.lex as lex
 
 # lexic analysis for the language portugol
-# TODO: add bracket counting
 
 # reserved words
 reserved = {
@@ -22,6 +21,7 @@ reserved = {
     "funcao": "FUNCTION",
     "vazio": "VOID",
     "programa": "PROGRAM",
+    "retorne": "RETURN",
 }
 
 relational_operators = [
