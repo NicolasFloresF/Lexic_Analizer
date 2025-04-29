@@ -29,3 +29,9 @@ class InvalidForLoopError(CompilerError):
     """Raised when a for-loop has invalid expressions"""
 
     pass
+
+
+class ParamCountError(CompilerError):
+    """Raised when the number of parameters is incorrect"""
+
+    pass
